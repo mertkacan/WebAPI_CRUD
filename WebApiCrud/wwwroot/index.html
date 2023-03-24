@@ -1,0 +1,114 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Kişiler</title>
+    <link href="lib/bootstrap/css/bootstrap.min.css" rel="stylesheet" />
+</head>
+<body>
+    <div class="container">
+        <h1 class="mt-4">Kişiler</h1>
+        <form id="frmYeni" class="d-flex">
+            <input class="form-control w-auto me-2" id="ad" type="text" required maxlength="100" />
+            <button class="btn btn-primary">Ekle</button>
+        </form>
+        <table class="table mt-2">
+            <thead>
+                <tr>
+                    <th>Id</th>
+                    <th>Ad</th>
+                    <th>İşlemler</th>
+                </tr>
+            </thead>
+            <tbody id="kisiler"></tbody>
+        </table>
+    </div>
+
+    <script>
+        const apiUrl = "api/Kisiler";
+        const tbody = document.getElementById("kisiler");
+        const frmYeni = document.getElementById("frmYeni");
+        const txtAd = document.getElementById("ad");
+
+        function listele() {
+            fetch(apiUrl)
+                .then(res => res.json())
+                .then(data => {
+                    tbody.innerHTML = "";
+
+                    for (const kisi of data) {
+                        tbody.innerHTML += `
+                        <tr>
+                            <td>${kisi.id}</td>
+                            <td>${kisi.ad}</td>
+                            <td>
+                                <button class="btn btn-danger me-2"
+                                    onclick="kisiSil(${kisi.id})">Sil</button>
+                                <button class="btn btn-warning me-2"
+                                    onclick="kisiDuzenle(${kisi.id}, '${kisi.ad}')">Düzenle</button>
+                            </td>
+                        </tr>
+`
+                    }
+                });
+        }
+
+        function kisiDuzenle(id, ad) {
+            let yeniAd = prompt("Ad", ad);
+
+            if (!yeniAd) return;
+
+            const requestOptions = {
+                method: "put",
+                headers: { "content-type": "application/json" },
+                body: JSON.stringify({ id, ad: yeniAd })
+            };
+
+            fetch(apiUrl + "/" + id, requestOptions)
+                .then(res => {
+                    if (res.ok) {
+                        listele();
+                    }
+                });
+        }
+
+        function kisiSil(id) {
+            const requestOptions = {
+                method: "delete"
+            };
+
+            fetch(apiUrl + "/" + id, requestOptions)
+                .then(res => {
+                    if (res.ok) {
+                        listele();
+                    }
+                });
+        }
+
+        function yeniKisiEkle() {
+            let ad = txtAd.value.trim();
+            txtAd.value = "";
+            if (!ad) return;
+
+            const requestOptions = {
+                method: "post",
+                headers: { "content-type": "application/json" },
+                body: JSON.stringify({ ad })
+            };
+
+            fetch(apiUrl, requestOptions)
+                .then(res => res.json())
+                .then(data => {
+                    listele();
+                });
+        }
+
+        frmYeni.onsubmit = function (event) {
+            event.preventDefault();
+            yeniKisiEkle();
+        };
+
+        listele();
+    </script>
+</body>
+</html>
